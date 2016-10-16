@@ -33,11 +33,12 @@ def sshfs_unmount(path):
     print('+ {}'.format(command_join(unmount_command)))
     subprocess.check_call(unmount_command)
 
-def backup(config, no_print_statistics, tab_dry):
+def backup(config, no_print_config, no_print_statistics, tab_dry):
 
     for backup in config:
 
-        print(yaml.dump({"backup": backup}, default_flow_style = False))
+        if not no_print_config:
+            print(yaml.dump({"backup": backup}, default_flow_style = False))
 
         backup_command = ['duplicity']
 
@@ -100,7 +101,7 @@ def backup(config, no_print_statistics, tab_dry):
             if target_mount_path:
                 os.rmdir(target_mount_path)
 
-def run(command, config_path, no_print_statistics, tab_dry):
+def run(command, config_path, no_print_config, no_print_statistics, tab_dry):
 
     with open(config_path) as config_file:
         config = yaml.load(config_file.read())
@@ -108,6 +109,7 @@ def run(command, config_path, no_print_statistics, tab_dry):
     if command == 'backup':
         backup(
             config = config,
+            no_print_config = no_print_config,
             no_print_statistics = no_print_statistics,
             tab_dry = tab_dry,
             )
@@ -126,6 +128,10 @@ def _init_argparser():
             dest = 'command',
             )
     subparser_backup = subparsers.add_parser('backup')
+    subparser_backup.add_argument(
+            '--no-print-config',
+            action = 'store_true',
+            )
     subparser_backup.add_argument(
             '--no-print-statistics',
             action = 'store_true',

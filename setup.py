@@ -13,6 +13,6 @@ setup(
     keywords = ['backup', 'duplicity'],
     classifiers = [],
     scripts = glob.glob('scripts/*'),
-    install_requires = ['argparse'],
+    install_requires = ['argparse', 'pyyaml'],
     tests_require = ['pytest']
     )

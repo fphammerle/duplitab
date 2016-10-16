@@ -4,6 +4,7 @@
 import collections
 import hashlib
 import os
+import re
 import shlex
 import subprocess
 import tabulate
@@ -163,6 +164,7 @@ def backup(config, duplicity_verbosity, no_print_config, no_print_statistics, ta
                 os.rmdir(source_mount_path)
 
 def run(command, config_path, quiet, duplicity_verbosity,
+        target_url_filter_regex = None,
         table_style = 'plain',
         no_print_config = False,
         no_print_trace = False, no_print_statistics = False, tab_dry = False):
@@ -181,6 +183,12 @@ def run(command, config_path, quiet, duplicity_verbosity,
         if not 'source_type' in backup_attr:
             backup_attr['source_type'] = 'local'
 
+    filtered_config = []
+    for backup_attr in config:
+        if (not target_url_filter_regex
+                or re.search('^{}$'.format(target_url_filter_regex), backup_attr['target_url'])):
+            filtered_config.append(backup_attr)
+
     if not command or command == 'list':
         columns = collections.OrderedDict([
             ('source type', 'source_type'),
@@ -189,7 +197,7 @@ def run(command, config_path, quiet, duplicity_verbosity,
             ('target url', 'target_url'),
             ('encrypt key', 'encrypt_key'),
             ])
-        table = [[b[c] for c in columns.values()] for b in config]
+        table = [[b[c] for c in columns.values()] for b in filtered_config]
         print(tabulate.tabulate(
             table,
             columns.keys(),
@@ -197,7 +205,7 @@ def run(command, config_path, quiet, duplicity_verbosity,
             ))
     elif command == 'backup':
         backup(
-            config = config,
+            config = filtered_config,
             duplicity_verbosity = duplicity_verbosity,
             no_print_config = no_print_config,
             no_print_statistics = no_print_statistics,
@@ -214,6 +222,12 @@ def _init_argparser():
             '--config',
             dest = 'config_path',
             default = '/etc/duplitab',
+            )
+    argparser.add_argument(
+            '--filter-target-url',
+            dest = 'target_url_filter_regex',
+            metavar = 'REGEXP',
+            default = None,
             )
     argparser.add_argument(
             '-q',

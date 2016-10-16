@@ -14,11 +14,19 @@ def command_join(args):
     return ' '.join([shlex.quote(a) for a in args])
 
 def sshfs_mount(url, path):
+    """ 
+    > Duplicity uses the URL format [...].  The generic format for a URL is:
+    >     scheme://[user[:password]@]host[:port]/[/]path
+    > [...]
+    > In protocols that support it, the path may be preceded by a single slash, '/path', to
+    > represent a relative path to the target home directory, or preceded by a double slash,
+    > '//path', to represent an absolute filesystem path.
+    """
     url_attr = urllib.parse.urlparse(url)
     assert url_attr.scheme in ['sftp']
     mount_command = [
         'sshfs',
-        '{}:{}'.format(url_attr.netloc, url_attr.path),
+        '{}:{}'.format(url_attr.netloc, url_attr.path[1:]),
         path,
         ]
     print('+ {}'.format(command_join(mount_command)))

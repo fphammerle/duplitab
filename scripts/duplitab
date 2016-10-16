@@ -52,6 +52,17 @@ def backup(config, no_print_statistics, tab_dry):
             if 'encrypt_key' in backup:
                 backup_command += ['--encrypt-key', backup['encrypt_key']]
 
+        # selectors
+        try:
+            selectors = backup['selectors']
+        except KeyError:
+            selectors = []
+        for selector in selectors:
+            if selector['option'] in ['include', 'exclude']:
+                backup_command += ['--{}'.format(selector['option']), selector['shell_pattern']]
+            else:
+                raise Exception("unsupported selector option '{}'".format(selector['option']))
+
         # statistics
         if no_print_statistics:
             backup_command.append('--no-print-statistics')

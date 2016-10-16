@@ -53,60 +53,90 @@ def backup(config, no_print_config, no_print_statistics, tab_dry):
             if 'encrypt_key' in backup:
                 backup_command += ['--encrypt-key', backup['encrypt_key']]
 
-        # selectors
-        try:
-            selectors = backup['selectors']
-        except KeyError:
-            selectors = []
-        for selector in selectors:
-            if selector['option'] in ['include', 'exclude']:
-                backup_command += ['--{}'.format(selector['option']), selector['shell_pattern']]
-            else:
-                raise Exception("unsupported selector option '{}'".format(selector['option']))
-
-        # statistics
-        if no_print_statistics:
-            backup_command.append('--no-print-statistics')
-
-        # source
+        # determine source
         try:
             source_type = backup['source_type']
         except KeyError:
             source_type = 'local'
-        if source_type == 'local':
-            backup_command += [backup['source_path']]
-        else:
-            raise Exception("unsupported source type '{}'".format(source_type))
-
-        # target
+        source_mount_path = None
         try:
-            target_mount_path = None
-            if 'target_via_sshfs' in backup and backup['target_via_sshfs']:
-                target_mount_path = tempfile.mkdtemp(prefix = 'duplitab-target-sshfs-')
-                backup_command += ['file://' + target_mount_path]
-                sshfs_mount(backup['target_url'], target_mount_path)
-                # set backup name to make archive dir persistent
-                # (default name: hash of target url)
-                backup_command += ['--name', hashlib.sha1(backup['target_url'].encode('utf-8')).hexdigest()]
+            if source_type == 'local':
+                local_source_path = backup['source_path']
+            elif source_type == 'sshfs':
+                source_mount_path = tempfile.mkdtemp(prefix = 'duplitab-source-sshfs-')
+                sshfs_mount(
+                    url = 'sftp://{}/{}'.format(backup['source_host'], backup['source_path']),
+                    path = source_mount_path,
+                    )
+                local_source_path = source_mount_path
+                backup_command.append('--allow-source-mismatch')
             else:
-                backup_command += [backup['target_url']]
+                raise Exception("unsupported source type '{}'".format(source_type))
+
+            # selectors
             try:
-                if tab_dry:
-                    print('* {}'.format(command_join(backup_command)))
+                selectors = backup['selectors']
+            except KeyError:
+                selectors = []
+            for selector in selectors:
+                if selector['option'] in ['include', 'exclude']:
+                    shell_pattern = selector['shell_pattern']
+                    if shell_pattern.startswith(backup['source_path']):
+                        shell_pattern = shell_pattern.replace(
+                                backup['source_path'],
+                                local_source_path,
+                                1,
+                                )
+                    backup_command += ['--{}'.format(selector['option']), shell_pattern]
                 else:
-                    print('+ {}'.format(command_join(backup_command)))
-                    subprocess.check_call(backup_command)
+                    raise Exception("unsupported selector option '{}'".format(selector['option']))
+
+            # statistics
+            if no_print_statistics:
+                backup_command.append('--no-print-statistics')
+
+            # source path
+            backup_command.append(local_source_path)
+
+            # target
+            target_mount_path = None
+            try:
+                if 'target_via_sshfs' in backup and backup['target_via_sshfs']:
+                    target_mount_path = tempfile.mkdtemp(prefix = 'duplitab-target-sshfs-')
+                    backup_command += ['file://' + target_mount_path]
+                    sshfs_mount(backup['target_url'], target_mount_path)
+                    # set backup name to make archive dir persistent
+                    # (default name: hash of target url)
+                    backup_command += ['--name', hashlib.sha1(backup['target_url'].encode('utf-8')).hexdigest()]
+                else:
+                    backup_command += [backup['target_url']]
+                try:
+                    if tab_dry:
+                        print('* {}'.format(command_join(backup_command)))
+                    else:
+                        print('+ {}'.format(command_join(backup_command)))
+                        subprocess.check_call(backup_command)
+                finally:
+                    if target_mount_path:
+                        try:
+                            sshfs_unmount(target_mount_path)
+                        except subprocess.CalledProcessError:
+                            time.sleep(1)
+                            sshfs_unmount(target_mount_path)
+
             finally:
                 if target_mount_path:
+                    os.rmdir(target_mount_path)
+                if source_mount_path:
                     try:
-                        sshfs_unmount(target_mount_path)
+                        sshfs_unmount(source_mount_path)
                     except subprocess.CalledProcessError:
                         time.sleep(1)
-                        sshfs_unmount(target_mount_path)
+                        sshfs_unmount(source_mount_path)
 
         finally:
-            if target_mount_path:
-                os.rmdir(target_mount_path)
+            if source_mount_path:
+                os.rmdir(source_mount_path)
 
 def run(command, config_path, no_print_config, no_print_statistics, tab_dry):
 

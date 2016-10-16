@@ -14,7 +14,7 @@ def command_join(args):
     return ' '.join([shlex.quote(a) for a in args])
 
 def sshfs_mount(url, path):
-    """ 
+    """
     > Duplicity uses the URL format [...].  The generic format for a URL is:
     >     scheme://[user[:password]@]host[:port]/[/]path
     > [...]
@@ -32,14 +32,25 @@ def sshfs_mount(url, path):
     print('+ {}'.format(command_join(mount_command)))
     subprocess.check_call(mount_command)
 
-def sshfs_unmount(path):
+def sshfs_unmount(path, retry_delay_seconds = 1.0, retry_count = 2):
     unmount_command = [
         'fusermount',
         '-u',
         path,
         ]
     print('+ {}'.format(command_join(unmount_command)))
-    subprocess.check_call(unmount_command)
+    try:
+        subprocess.check_call(unmount_command)
+    except subprocess.CalledProcessError as ex:
+        if retry_count > 0:
+            time.sleep(retry_delay_seconds)
+            sshfs_unmount(
+                    path = path,
+                    retry_delay_seconds = retry_delay_seconds,
+                    retry_count = retry_count - 1,
+                    )
+        else:
+            raise ex
 
 def backup(config, no_print_config, no_print_statistics, tab_dry):
 
@@ -126,21 +137,13 @@ def backup(config, no_print_config, no_print_statistics, tab_dry):
                         subprocess.check_call(backup_command)
                 finally:
                     if target_mount_path:
-                        try:
-                            sshfs_unmount(target_mount_path)
-                        except subprocess.CalledProcessError:
-                            time.sleep(1)
-                            sshfs_unmount(target_mount_path)
+                        sshfs_unmount(target_mount_path)
 
             finally:
                 if target_mount_path:
                     os.rmdir(target_mount_path)
                 if source_mount_path:
-                    try:
-                        sshfs_unmount(source_mount_path)
-                    except subprocess.CalledProcessError:
-                        time.sleep(1)
-                        sshfs_unmount(source_mount_path)
+                    sshfs_unmount(source_mount_path)
 
         finally:
             if source_mount_path:

@@ -32,7 +32,7 @@ def sshfs_unmount(path):
     print('+ {}'.format(command_join(unmount_command)))
     subprocess.check_call(unmount_command)
 
-def backup(config):
+def backup(config, no_print_statistics):
 
     for backup in config:
         print(yaml.dump({"backup": backup}, default_flow_style = False))
@@ -50,6 +50,8 @@ def backup(config):
         else:
             if 'encrypt_key' in backup:
                 backup_command += ['--encrypt-key', backup['encrypt_key']]
+        if no_print_statistics:
+            backup_command.append('--no-print-statistics')
         backup_command += [backup['source_path']]
         try:
             target_mount_path = None
@@ -72,13 +74,16 @@ def backup(config):
             if target_mount_path:
                 os.rmdir(target_mount_path)
 
-def run(command, config_path):
+def run(command, config_path, no_print_statistics):
 
     with open(config_path) as config_file:
         config = yaml.load(config_file.read())
 
     if command == 'backup':
-        backup(config)
+        backup(
+            config = config,
+            no_print_statistics = no_print_statistics,
+            )
 
 def _init_argparser():
 
@@ -93,7 +98,11 @@ def _init_argparser():
     subparsers = argparser.add_subparsers(
             dest = 'command',
             )
-    subparsers.add_parser('backup')
+    subparser_backup = subparsers.add_parser('backup')
+    subparser_backup.add_argument(
+            '--no-print-statistics',
+            action = 'store_true',
+            )
 
     return argparser
 

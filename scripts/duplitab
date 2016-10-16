@@ -79,15 +79,11 @@ def backup(config, duplicity_verbosity, no_print_config, no_print_statistics, ta
                 backup_command += ['--encrypt-key', backup['encrypt_key']]
 
         # determine source
-        try:
-            source_type = backup['source_type']
-        except KeyError:
-            source_type = 'local'
         source_mount_path = None
         try:
-            if source_type == 'local':
+            if backup['source_type'] == 'local':
                 local_source_path = backup['source_path']
-            elif source_type == 'sshfs':
+            elif backup['source_type'] == 'sshfs':
                 source_mount_path = tempfile.mkdtemp(prefix = 'duplitab-source-sshfs-')
                 sshfs_mount(
                     url = 'sftp://{}/{}'.format(backup['source_host'], backup['source_path']),
@@ -97,7 +93,7 @@ def backup(config, duplicity_verbosity, no_print_config, no_print_statistics, ta
                 local_source_path = source_mount_path
                 backup_command.append('--allow-source-mismatch')
             else:
-                raise Exception("unsupported source type '{}'".format(source_type))
+                raise Exception("unsupported source type '{}'".format(backup['source_type']))
 
             # selectors
             try:
@@ -181,10 +177,17 @@ def run(command, config_path, quiet, duplicity_verbosity,
     with open(config_path) as config_file:
         config = yaml.load(config_file.read())
 
+    for backup_attr in config:
+        if not 'source_type' in backup_attr:
+            backup_attr['source_type'] = 'local'
+
     if not command or command == 'list':
         columns = collections.OrderedDict([
+            ('source type', 'source_type'),
+            ('source host', 'source_host'),
             ('source path', 'source_path'),
             ('target url', 'target_url'),
+            ('encrypt key', 'encrypt_key'),
             ])
         table = [[b[c] for c in columns.values()] for b in config]
         print(tabulate.tabulate(

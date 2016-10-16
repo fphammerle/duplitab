@@ -68,10 +68,17 @@ def backup(config, no_print_config, no_print_statistics, tab_dry):
         if no_print_statistics:
             backup_command.append('--no-print-statistics')
 
-        # source path
-        backup_command += [backup['source_path']]
+        # source
+        try:
+            source_type = backup['source_type']
+        except KeyError:
+            source_type = 'local'
+        if source_type == 'local':
+            backup_command += [backup['source_path']]
+        else:
+            raise Exception("unsupported source type '{}'".format(source_type))
 
-        # target path
+        # target
         try:
             target_mount_path = None
             if 'target_via_sshfs' in backup and backup['target_via_sshfs']:

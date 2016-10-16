@@ -6,6 +6,7 @@ import os
 import shlex
 import subprocess
 import tempfile
+import time
 import urllib.parse
 import yaml
 
@@ -32,30 +33,36 @@ def sshfs_unmount(path):
     print('+ {}'.format(command_join(unmount_command)))
     subprocess.check_call(unmount_command)
 
-def backup(config, no_print_statistics):
+def backup(config, no_print_statistics, tab_dry):
 
     for backup in config:
+
         print(yaml.dump({"backup": backup}, default_flow_style = False))
+
+        backup_command = ['duplicity']
+
+        # encryption
         try:
             encryption = backup['encryption']
         except KeyError:
             encryption = True
-        try:
-            target_via_sshfs = backup['target_via_sshfs']
-        except KeyError:
-            target_via_sshfs = False
-        backup_command = ['duplicity']
         if 'encryption' in backup and not backup['encryption']:
             backup_command += ['--no-encryption']
         else:
             if 'encrypt_key' in backup:
                 backup_command += ['--encrypt-key', backup['encrypt_key']]
+
+        # statistics
         if no_print_statistics:
             backup_command.append('--no-print-statistics')
+
+        # source path
         backup_command += [backup['source_path']]
+
+        # target path
         try:
             target_mount_path = None
-            if target_via_sshfs:
+            if 'target_via_sshfs' in backup and backup['target_via_sshfs']:
                 target_mount_path = tempfile.mkdtemp(prefix = 'duplitab-target-sshfs-')
                 backup_command += ['file://' + target_mount_path]
                 sshfs_mount(backup['target_url'], target_mount_path)
@@ -65,16 +72,24 @@ def backup(config, no_print_statistics):
             else:
                 backup_command += [backup['target_url']]
             try:
-                print('+ {}'.format(command_join(backup_command)))
-                subprocess.check_call(backup_command)
+                if tab_dry:
+                    print('* {}'.format(command_join(backup_command)))
+                else:
+                    print('+ {}'.format(command_join(backup_command)))
+                    subprocess.check_call(backup_command)
             finally:
                 if target_mount_path:
-                    sshfs_unmount(target_mount_path)
+                    try:
+                        sshfs_unmount(target_mount_path)
+                    except subprocess.CalledProcessError:
+                        time.sleep(1)
+                        sshfs_unmount(target_mount_path)
+
         finally:
             if target_mount_path:
                 os.rmdir(target_mount_path)
 
-def run(command, config_path, no_print_statistics):
+def run(command, config_path, no_print_statistics, tab_dry):
 
     with open(config_path) as config_file:
         config = yaml.load(config_file.read())
@@ -83,6 +98,7 @@ def run(command, config_path, no_print_statistics):
         backup(
             config = config,
             no_print_statistics = no_print_statistics,
+            tab_dry = tab_dry,
             )
 
 def _init_argparser():
@@ -101,6 +117,10 @@ def _init_argparser():
     subparser_backup = subparsers.add_parser('backup')
     subparser_backup.add_argument(
             '--no-print-statistics',
+            action = 'store_true',
+            )
+    subparser_backup.add_argument(
+            '--tab-dry',
             action = 'store_true',
             )
 

@@ -52,7 +52,7 @@ def sshfs_unmount(path, retry_delay_seconds = 1.0, retry_count = 2):
         else:
             raise ex
 
-def backup(config, no_print_config, no_print_statistics, tab_dry):
+def backup(config, duplicity_verbosity, no_print_config, no_print_statistics, tab_dry):
 
     for backup in config:
 
@@ -110,6 +110,10 @@ def backup(config, no_print_config, no_print_statistics, tab_dry):
                 else:
                     raise Exception("unsupported selector option '{}'".format(selector['option']))
 
+            # duplicity verbosity
+            if duplicity_verbosity:
+                backup_command += ['--verbosity', duplicity_verbosity]
+
             # statistics
             if no_print_statistics:
                 backup_command.append('--no-print-statistics')
@@ -149,7 +153,14 @@ def backup(config, no_print_config, no_print_statistics, tab_dry):
             if source_mount_path:
                 os.rmdir(source_mount_path)
 
-def run(command, config_path, no_print_config, no_print_statistics, tab_dry):
+def run(command, config_path, quiet, duplicity_verbosity, no_print_config,
+        no_print_statistics, tab_dry):
+
+    if quiet:
+        if not duplicity_verbosity:
+            duplicity_verbosity = 'warning'
+        no_print_statistics = True
+        no_print_config = True
 
     with open(config_path) as config_file:
         config = yaml.load(config_file.read())
@@ -157,6 +168,7 @@ def run(command, config_path, no_print_config, no_print_statistics, tab_dry):
     if command == 'backup':
         backup(
             config = config,
+            duplicity_verbosity = duplicity_verbosity,
             no_print_config = no_print_config,
             no_print_statistics = no_print_statistics,
             tab_dry = tab_dry,
@@ -171,6 +183,17 @@ def _init_argparser():
             '--config',
             dest = 'config_path',
             default = '/etc/duplitab',
+            )
+    argparser.add_argument(
+            '-q',
+            '--quiet',
+            '--silent',
+            action = 'store_true',
+            dest = 'quiet',
+            )
+    argparser.add_argument(
+            '--duplicity-verbosity',
+            type = str,
             )
     subparsers = argparser.add_subparsers(
             dest = 'command',

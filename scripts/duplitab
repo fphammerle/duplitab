@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # PYTHON_ARGCOMPLETE_OK
 
+import hashlib
 import os
 import shlex
 import subprocess
@@ -56,6 +57,9 @@ def backup(config):
                 target_mount_path = tempfile.mkdtemp(prefix = 'duplitab-target-sshfs-')
                 backup_command += ['file://' + target_mount_path]
                 sshfs_mount(backup['target_url'], target_mount_path)
+                # set backup name to make archive dir persistent
+                # (default name: hash of target url)
+                backup_command += ['--name', hashlib.sha1(backup['target_url'].encode('utf-8')).hexdigest()]
             else:
                 backup_command += [backup['target_url']]
             try:

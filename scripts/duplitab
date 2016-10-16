@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # PYTHON_ARGCOMPLETE_OK
 
+import collections
 import hashlib
 import os
 import shlex
 import subprocess
+import tabulate
 import tempfile
 import time
 import urllib.parse
@@ -13,7 +15,7 @@ import yaml
 def command_join(args):
     return ' '.join([shlex.quote(a) for a in args])
 
-def sshfs_mount(url, path):
+def sshfs_mount(url, path, print_trace = False):
     """
     > Duplicity uses the URL format [...].  The generic format for a URL is:
     >     scheme://[user[:password]@]host[:port]/[/]path
@@ -29,16 +31,18 @@ def sshfs_mount(url, path):
         '{}:{}'.format(url_attr.netloc, url_attr.path[1:]),
         path,
         ]
-    print('+ {}'.format(command_join(mount_command)))
+    if print_trace:
+        print('+ {}'.format(command_join(mount_command)))
     subprocess.check_call(mount_command)
 
-def sshfs_unmount(path, retry_delay_seconds = 1.0, retry_count = 2):
+def sshfs_unmount(path, retry_delay_seconds = 1.0, retry_count = 2, print_trace = False):
     unmount_command = [
         'fusermount',
         '-u',
         path,
         ]
-    print('+ {}'.format(command_join(unmount_command)))
+    if print_trace:
+        print('+ {}'.format(command_join(unmount_command)))
     try:
         subprocess.check_call(unmount_command)
     except subprocess.CalledProcessError as ex:
@@ -48,16 +52,18 @@ def sshfs_unmount(path, retry_delay_seconds = 1.0, retry_count = 2):
                     path = path,
                     retry_delay_seconds = retry_delay_seconds,
                     retry_count = retry_count - 1,
+                    print_trace = print_trace,
                     )
         else:
             raise ex
 
-def backup(config, duplicity_verbosity, no_print_config, no_print_statistics, tab_dry):
+def backup(config, duplicity_verbosity, no_print_config, no_print_statistics, tab_dry,
+           print_trace = False):
 
     for backup in config:
 
         if not no_print_config:
-            print(yaml.dump({"backup": backup}, default_flow_style = False))
+            print('\n{}'.format(yaml.dump({'backup': backup}, default_flow_style = False).strip()))
 
         backup_command = ['duplicity']
 
@@ -86,6 +92,7 @@ def backup(config, duplicity_verbosity, no_print_config, no_print_statistics, ta
                 sshfs_mount(
                     url = 'sftp://{}/{}'.format(backup['source_host'], backup['source_path']),
                     path = source_mount_path,
+                    print_trace = print_trace,
                     )
                 local_source_path = source_mount_path
                 backup_command.append('--allow-source-mismatch')
@@ -127,51 +134,72 @@ def backup(config, duplicity_verbosity, no_print_config, no_print_statistics, ta
                 if 'target_via_sshfs' in backup and backup['target_via_sshfs']:
                     target_mount_path = tempfile.mkdtemp(prefix = 'duplitab-target-sshfs-')
                     backup_command += ['file://' + target_mount_path]
-                    sshfs_mount(backup['target_url'], target_mount_path)
+                    sshfs_mount(
+                        backup['target_url'],
+                        target_mount_path,
+                        print_trace = print_trace,
+                        )
                     # set backup name to make archive dir persistent
                     # (default name: hash of target url)
                     backup_command += ['--name', hashlib.sha1(backup['target_url'].encode('utf-8')).hexdigest()]
                 else:
                     backup_command += [backup['target_url']]
                 try:
-                    if tab_dry:
-                        print('* {}'.format(command_join(backup_command)))
-                    else:
-                        print('+ {}'.format(command_join(backup_command)))
+                    if print_trace:
+                        print('{} {}'.format(
+                            '*' if tab_dry else '+',
+                            command_join(backup_command),
+                            ))
+                    if not tab_dry:
                         subprocess.check_call(backup_command)
                 finally:
                     if target_mount_path:
-                        sshfs_unmount(target_mount_path)
+                        sshfs_unmount(target_mount_path, print_trace = print_trace)
 
             finally:
                 if target_mount_path:
                     os.rmdir(target_mount_path)
                 if source_mount_path:
-                    sshfs_unmount(source_mount_path)
+                    sshfs_unmount(source_mount_path, print_trace = print_trace)
 
         finally:
             if source_mount_path:
                 os.rmdir(source_mount_path)
 
-def run(command, config_path, quiet, duplicity_verbosity, no_print_config,
-        no_print_statistics, tab_dry):
+def run(command, config_path, quiet, duplicity_verbosity,
+        table_style = 'plain',
+        no_print_config = False,
+        no_print_trace = False, no_print_statistics = False, tab_dry = False):
 
     if quiet:
         if not duplicity_verbosity:
             duplicity_verbosity = 'warning'
+        no_print_trace = True
         no_print_statistics = True
         no_print_config = True
 
     with open(config_path) as config_file:
         config = yaml.load(config_file.read())
 
-    if command == 'backup':
+    if not command or command == 'list':
+        columns = collections.OrderedDict([
+            ('source path', 'source_path'),
+            ('target url', 'target_url'),
+            ])
+        table = [[b[c] for c in columns.values()] for b in config]
+        print(tabulate.tabulate(
+            table,
+            columns.keys(),
+            tablefmt = table_style,
+            ))
+    elif command == 'backup':
         backup(
             config = config,
             duplicity_verbosity = duplicity_verbosity,
             no_print_config = no_print_config,
             no_print_statistics = no_print_statistics,
             tab_dry = tab_dry,
+            print_trace = not no_print_trace,
             )
 
 def _init_argparser():
@@ -195,8 +223,17 @@ def _init_argparser():
             '--duplicity-verbosity',
             type = str,
             )
+    argparser.add_argument(
+            '--no-print-trace',
+            action = 'store_true',
+            )
     subparsers = argparser.add_subparsers(
             dest = 'command',
+            )
+    subparser_list = subparsers.add_parser('list')
+    subparser_list.add_argument(
+            '--table-style',
+            default = 'plain',
             )
     subparser_backup = subparsers.add_parser('backup')
     subparser_backup.add_argument(

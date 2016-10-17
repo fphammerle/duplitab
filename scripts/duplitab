@@ -182,6 +182,10 @@ def run(command, config_path, quiet, duplicity_verbosity,
     for backup_attr in config:
         if not 'source_type' in backup_attr:
             backup_attr['source_type'] = 'local'
+        if not 'source_host' in backup_attr:
+            backup_attr['source_host'] = None
+        if not 'encrypt_key' in backup_attr:
+            backup_attr['encrypt_key'] = None
 
     filtered_config = []
     for backup_attr in config:

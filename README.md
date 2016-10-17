@@ -5,7 +5,8 @@ wrapper for duplicity featuring persistent backup configuration
 
 ```yaml
 # /etc/duplitab
--   source_path: /home
+-   name: home at media backup
+    source_path: /home
     target_url: file:///media/backup/home
     encryption: no
 -   source_path: /secret/folder

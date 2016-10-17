@@ -68,6 +68,10 @@ def backup(config, duplicity_verbosity, no_print_config, no_print_statistics, ta
 
         backup_command = ['duplicity']
 
+        # name
+        if backup['name']:
+            backup_command += ['--name', backup['name']]
+
         # encryption
         try:
             encryption = backup['encryption']
@@ -138,7 +142,8 @@ def backup(config, duplicity_verbosity, no_print_config, no_print_statistics, ta
                         )
                     # set backup name to make archive dir persistent
                     # (default name: hash of target url)
-                    backup_command += ['--name', hashlib.sha1(backup['target_url'].encode('utf-8')).hexdigest()]
+                    if not backup['name']:
+                        backup_command += ['--name', hashlib.sha1(backup['target_url'].encode('utf-8')).hexdigest()]
                 else:
                     backup_command += [backup['target_url']]
                 try:
@@ -180,6 +185,8 @@ def run(command, config_path, quiet, duplicity_verbosity,
         config = yaml.load(config_file.read())
 
     for backup_attr in config:
+        if not 'name' in backup_attr:
+            backup_attr['name'] = None
         if not 'source_type' in backup_attr:
             backup_attr['source_type'] = 'local'
         if not 'source_host' in backup_attr:
@@ -195,6 +202,7 @@ def run(command, config_path, quiet, duplicity_verbosity,
 
     if not command or command == 'list':
         columns = collections.OrderedDict([
+            ('name', 'name'),
             ('source type', 'source_type'),
             ('source host', 'source_host'),
             ('source path', 'source_path'),

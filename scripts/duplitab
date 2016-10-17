@@ -58,6 +58,18 @@ def sshfs_unmount(path, retry_delay_seconds = 1.0, retry_count = 2, print_trace 
         else:
             raise ex
 
+class InvalidBackupConfigError(ValueError):
+
+    def __init__(self, message, backup_config):
+        super().__init__(message)
+        self.backup_config = backup_config
+
+    def __str__(self):
+        return "{}\n\n{}".format(
+            super().__str__(),
+            yaml.dump({'backup config': self.backup_config}, default_flow_style = False),
+            )
+
 def backup(config, duplicity_verbosity, no_print_config, no_print_statistics, tab_dry,
            print_trace = False):
 
@@ -187,6 +199,11 @@ def run(command, config_path, quiet, duplicity_verbosity,
     for backup_attr in config:
         if not 'name' in backup_attr:
             backup_attr['name'] = None
+        elif os.sep in backup_attr['name']:
+            raise InvalidBackupConfigError(
+                    "backup name may not contain '{}'".format(os.sep),
+                    backup_config = backup_attr,
+                    )
         if not 'source_type' in backup_attr:
             backup_attr['source_type'] = 'local'
         if not 'source_host' in backup_attr:

@@ -35,7 +35,7 @@ local                         /secret/folder  sftp://user@server//media/backup/s
 local                         /var/www        file:///media/backup/web
 ```
 ```bash
-$ duplitab -filter-target-url '.*media/backup/[hs].*' list --table-style tabular
+$ duplitab --filter-target-url '.*media/backup/[hs].*' list --table-style tabular
 source type      source host  source path     target url                               encrypt key
 -------------  -------------  --------------  ---------------------------------------  -------------
 local                         /home           file:///media/backup/home
@@ -48,5 +48,5 @@ local                         /secret/folder  sftp://user@server//media/backup/s
 $ duplitab backup
 ```
 ```bash
-$ duplitab -filter-target-url '.*media/backup/[hs].*' backup
+$ duplitab --filter-target-url '.*media/backup/[hs].*' backup
 ```

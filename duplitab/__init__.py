@@ -45,6 +45,10 @@ class _CollectionStatus(_Status):
     def __init__(self, primary_chain):
         self.primary_chain = primary_chain
 
+    @property
+    def last_incremental_backup_time(self):
+        return self.primary_chain.last_backup_time if self.primary_chain else None
+
     @classmethod
     def _parse(cls, text):
         if 'No backup chains with active signatures found' in text:

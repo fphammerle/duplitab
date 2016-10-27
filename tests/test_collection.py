@@ -108,3 +108,36 @@ def test_collection_request_status(url, expected_status):
 ])
 def test_chain_status_get_last_backup_time(chain_status, expected_time):
     assert expected_time == chain_status.last_backup_time
+
+
+@pytest.mark.parametrize(('collection_status', 'expected_time'), [
+    [
+        duplitab._CollectionStatus(
+            primary_chain=duplitab._ChainStatus(
+                sets=[
+                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
+                ]),
+        ),
+        datetime.datetime(2016, 10, 27, 19, 57, 33),
+    ],
+    [
+        duplitab._CollectionStatus(
+            primary_chain=duplitab._ChainStatus(
+                sets=[
+                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
+                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 35)),
+                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 39)),
+                ]),
+        ),
+        datetime.datetime(2016, 10, 27, 19, 57, 39),
+    ],
+    [
+        duplitab._CollectionStatus(
+            primary_chain=None,
+        ),
+        None,
+    ],
+])
+def test_collection_status_get_incremental_backup_time(
+        collection_status, expected_time):
+    assert expected_time == collection_status.last_incremental_backup_time

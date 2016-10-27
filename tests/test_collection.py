@@ -76,6 +76,12 @@ def test_collection_init_fail(init_kwargs, ex_class):
                 ]),
         ),
     ],
+    [
+        'file://{}'.format(os.path.join(test_collections_dir_path, 'none')),
+        duplitab._CollectionStatus(
+            primary_chain=None,
+        ),
+    ],
 ])
 def test_collection_request_status(url, expected_status):
     c = duplitab.Collection(url=url)

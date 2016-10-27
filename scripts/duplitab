@@ -238,9 +238,10 @@ def run(command, config_path, quiet, duplicity_verbosity,
         for backup_attr in filtered_config:
             collection = duplitab.Collection(url = backup_attr['target_url'])
             status = collection.request_status()
+            primary_chain = status.primary_chain
             table.append([
                 collection.url,
-                status.primary_chain.sets[-1].backup_time,
+                primary_chain.sets[-1].backup_time if 'primary chain' else 'never',
                 ])
         print(tabulate.tabulate(
             table,

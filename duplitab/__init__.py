@@ -47,17 +47,21 @@ class _CollectionStatus(_Status):
 
     @classmethod
     def _parse(cls, text):
-        primary_chain_match = re.search(
-            '^Found primary backup chain.*\s{sep}([\w\W]*?)\s{sep}'.format(
-                sep=_CollectionStatus.chain_separator_regex,
-            ),
-            text,
-            re.MULTILINE,
-        )
-        return cls(
-            primary_chain=_ChainStatus._parse(
+        if 'No backup chains with active signatures found' in text:
+            primary_chain = None
+        else:
+            primary_chain_match = re.search(
+                '^Found primary backup chain.*\s{sep}([\w\W]*?)\s{sep}'.format(
+                    sep=_CollectionStatus.chain_separator_regex,
+                ),
+                text,
+                re.MULTILINE,
+            )
+            primary_chain = _ChainStatus._parse(
                 text=primary_chain_match.group(1),
-            ),
+            )
+        return cls(
+            primary_chain=primary_chain,
         )
 
 

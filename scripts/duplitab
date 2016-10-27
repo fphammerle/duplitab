@@ -2,6 +2,7 @@
 # PYTHON_ARGCOMPLETE_OK
 
 import collections
+import duplitab
 import hashlib
 import os
 import re
@@ -232,6 +233,20 @@ def run(command, config_path, quiet, duplicity_verbosity,
             columns.keys(),
             tablefmt = table_style,
             ))
+    elif command == 'status':
+        table = []
+        for backup_attr in filtered_config:
+            collection = duplitab.Collection(url = backup_attr['target_url'])
+            status = collection.request_status()
+            table.append([
+                collection.url,
+                status.primary_chain.sets[-1].backup_time,
+                ])
+        print(tabulate.tabulate(
+            table,
+            ['target_url', 'last backup'],
+            tablefmt = table_style,
+            ))
     elif command == 'backup':
         backup(
             config = filtered_config,
@@ -277,6 +292,11 @@ def _init_argparser():
             dest = 'command',
             )
     subparser_list = subparsers.add_parser('list')
+    subparser_list.add_argument(
+            '--table-style',
+            default = 'plain',
+            )
+    subparser_list = subparsers.add_parser('status')
     subparser_list.add_argument(
             '--table-style',
             default = 'plain',

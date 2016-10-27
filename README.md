@@ -51,3 +51,13 @@ $ duplitab backup
 ```bash
 $ duplitab --filter-target-url '.*media/backup/[hs].*' backup
 ```
+
+## Show Status
+
+```bash
+$ duplitab --filter-target-url '.*media/backup/[hs].*' status --table-style tabular
+target url                               last_backup
+---------------------------------------  -------------------
+file:///media/backup/home                2016-10-23 08:35:13
+sftp://user@server//media/backup/secret  2016-09-22 09:36:14
+```

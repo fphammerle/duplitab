@@ -1,7 +1,12 @@
 import pytest
 
+import os
 import duplitab
 import datetime
+
+project_root_path = os.path.realpath(os.path.join(__file__, '..', '..'))
+test_data_dir_path = os.path.join(project_root_path, 'tests', 'data')
+test_collections_dir_path = os.path.join(test_data_dir_path, 'collections')
 
 
 @pytest.mark.parametrize(('init_kwargs', 'expected_attr'), [
@@ -42,7 +47,27 @@ def test_collection_init_fail(init_kwargs, ex_class):
 
 @pytest.mark.parametrize(('url', 'expected_status'), [
     [
-        'file://tests/data/collections/empty/multiple-full',
+        'file://{}'.format(os.path.join(test_collections_dir_path, 'empty', 'only-full')),
+        duplitab._CollectionStatus(
+            primary_chain=duplitab._ChainStatus(
+                sets=[
+                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
+                ]),
+        ),
+    ],
+    [
+        'file://{}'.format(os.path.join(test_collections_dir_path, 'empty', 'single-full')),
+        duplitab._CollectionStatus(
+            primary_chain=duplitab._ChainStatus(
+                sets=[
+                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
+                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 35)),
+                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 39)),
+                ]),
+        ),
+    ],
+    [
+        'file://{}'.format(os.path.join(test_collections_dir_path, 'empty', 'multiple-full')),
         duplitab._CollectionStatus(
             primary_chain=duplitab._ChainStatus(
                 sets=[

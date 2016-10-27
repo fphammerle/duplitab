@@ -42,7 +42,8 @@ class _CollectionStatus(_Status):
 
     chain_separator_regex = r'-{25}\s'
 
-    def __init__(self, primary_chain):
+    def __init__(self, archive_dir_path, primary_chain):
+        self.archive_dir_path = archive_dir_path
         self.primary_chain = primary_chain
 
     @property
@@ -65,6 +66,7 @@ class _CollectionStatus(_Status):
                 text=primary_chain_match.group(1),
             )
         return cls(
+            archive_dir_path=re.search(r'Archive dir: (.*)', text).group(1),
             primary_chain=primary_chain,
         )
 

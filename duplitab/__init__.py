@@ -70,11 +70,9 @@ class _ChainStatus(_Status):
     def __init__(self, sets):
         self.sets = sets
 
-    def __eq__(self, other):
-        return isinstance(self, type(other)) and vars(self) == vars(other)
-
-    def __neq__(self, other):
-        return not (self == other)
+    @property
+    def last_backup_time(self):
+        return max([s.backup_time for s in self.sets])
 
     @classmethod
     def _parse(cls, text):
@@ -97,9 +95,3 @@ class _SetStatus(_Status):
 
     def __init__(self, backup_time):
         self.backup_time = backup_time
-
-    def __eq__(self, other):
-        return isinstance(self, type(other)) and vars(self) == vars(other)
-
-    def __neq__(self, other):
-        return not (self == other)

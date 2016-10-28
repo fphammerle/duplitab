@@ -59,5 +59,5 @@ $ duplitab --filter-target-url '.*media/backup/[hs].*' status --table-style tabu
 target_url                               last full backup     last incremental backup
 ---------------------------------------  -------------------  -----------------------
 file:///media/backup/home                2016-01-01 08:04:04  2016-10-23 08:35:13
-sftp://user@server//media/backup/secret  2016-09-22 09:36:14  2016-09-22 09:36:14
+sftp://user@server//media/backup/secret  2016-09-22 09:36:14  never
 ```

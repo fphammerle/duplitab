@@ -52,7 +52,7 @@ class _CollectionStatus(_Status):
 
     @property
     def last_incremental_backup_time(self):
-        return self.primary_chain.last_backup_time if self.primary_chain else None
+        return self.primary_chain.last_incremental_backup_time if self.primary_chain else None
 
     @classmethod
     def _parse(cls, text):

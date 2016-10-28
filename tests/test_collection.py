@@ -167,7 +167,7 @@ def test_chain_status_get_first_backup_time(chain_status, expected_time):
                     duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
                 ]),
         ),
-        datetime.datetime(2016, 10, 27, 19, 57, 33),
+        None,
     ],
     [
         duplitab._CollectionStatus(

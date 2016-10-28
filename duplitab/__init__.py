@@ -88,6 +88,10 @@ class _ChainStatus(_Status):
     def last_backup_time(self):
         return max([s.backup_time for s in self.sets])
 
+    @property
+    def last_incremental_backup_time(self):
+        return self.last_backup_time if len(self.sets) > 1 else None
+
     @classmethod
     def _parse(cls, text):
         sets = []

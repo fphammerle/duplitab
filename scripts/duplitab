@@ -240,11 +240,12 @@ def run(command, config_path, quiet, duplicity_verbosity,
             status = collection.request_status()
             table.append([
                 collection.url,
+                status.last_full_backup_time or 'never',
                 status.last_incremental_backup_time or 'never',
                 ])
         print(tabulate.tabulate(
             table,
-            ['target_url', 'last backup'],
+            ['target_url', 'last full backup', 'last incremental backup'],
             tablefmt = table_style,
             ))
     elif command == 'backup':

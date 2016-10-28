@@ -47,6 +47,10 @@ class _CollectionStatus(_Status):
         self.primary_chain = primary_chain
 
     @property
+    def last_full_backup_time(self):
+        return self.primary_chain.first_backup_time if self.primary_chain else None
+
+    @property
     def last_incremental_backup_time(self):
         return self.primary_chain.last_backup_time if self.primary_chain else None
 

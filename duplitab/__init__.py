@@ -77,6 +77,10 @@ class _ChainStatus(_Status):
         self.sets = sets
 
     @property
+    def first_backup_time(self):
+        return min([s.backup_time for s in self.sets])
+
+    @property
     def last_backup_time(self):
         return max([s.backup_time for s in self.sets])
 

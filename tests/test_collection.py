@@ -47,32 +47,47 @@ def test_collection_init_fail(init_kwargs, ex_class):
 
 @pytest.mark.parametrize(('url', 'expected_status_attr'), [
     [
-        'file://{}'.format(os.path.join(test_collections_dir_path, 'empty', 'only-full')),
+        'file://{}'.format(os.path.join(test_collections_dir_path,
+                                        'empty', 'only-full')),
         {
             'primary_chain': duplitab._ChainStatus(
                 sets=[
-                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
+                    duplitab._SetStatus(
+                        backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33),
+                    ),
                 ]),
         },
     ],
     [
-        'file://{}'.format(os.path.join(test_collections_dir_path, 'empty', 'single-full')),
+        'file://{}'.format(os.path.join(test_collections_dir_path,
+                                        'empty', 'single-full')),
         {
             'primary_chain': duplitab._ChainStatus(
                 sets=[
-                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
-                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 35)),
-                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 39)),
+                    duplitab._SetStatus(
+                        backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33),
+                    ),
+                    duplitab._SetStatus(
+                        backup_time=datetime.datetime(2016, 10, 27, 19, 57, 35),
+                    ),
+                    duplitab._SetStatus(
+                        backup_time=datetime.datetime(2016, 10, 27, 19, 57, 39),
+                    ),
                 ]),
         },
     ],
     [
-        'file://{}'.format(os.path.join(test_collections_dir_path, 'empty', 'multiple-full')),
+        'file://{}'.format(os.path.join(test_collections_dir_path,
+                                        'empty', 'multiple-full')),
         {
             'primary_chain': duplitab._ChainStatus(
                 sets=[
-                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 47)),
-                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 54)),
+                    duplitab._SetStatus(
+                        backup_time=datetime.datetime(2016, 10, 27, 19, 57, 47),
+                    ),
+                    duplitab._SetStatus(
+                        backup_time=datetime.datetime(2016, 10, 27, 19, 57, 54),
+                    ),
                 ]),
         },
     ],
@@ -95,16 +110,24 @@ def test_collection_request_status(url, expected_status_attr):
     [
         duplitab._ChainStatus(
             sets=[
-                duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
+                duplitab._SetStatus(
+                    backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33),
+                ),
             ]),
         datetime.datetime(2016, 10, 27, 19, 57, 33),
     ],
     [
         duplitab._ChainStatus(
             sets=[
-                duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
-                duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 35)),
-                duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 39)),
+                duplitab._SetStatus(
+                    backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33),
+                ),
+                duplitab._SetStatus(
+                    backup_time=datetime.datetime(2016, 10, 27, 19, 57, 35),
+                ),
+                duplitab._SetStatus(
+                    backup_time=datetime.datetime(2016, 10, 27, 19, 57, 39),
+                ),
             ]),
         datetime.datetime(2016, 10, 27, 19, 57, 39),
     ],
@@ -117,16 +140,24 @@ def test_chain_status_get_last_backup_time(chain_status, expected_time):
     [
         duplitab._ChainStatus(
             sets=[
-                duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
+                duplitab._SetStatus(
+                    backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33),
+                ),
             ]),
         None,
     ],
     [
         duplitab._ChainStatus(
             sets=[
-                duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
-                duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 35)),
-                duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 39)),
+                duplitab._SetStatus(
+                    backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33),
+                ),
+                duplitab._SetStatus(
+                    backup_time=datetime.datetime(2016, 10, 27, 19, 57, 35),
+                ),
+                duplitab._SetStatus(
+                    backup_time=datetime.datetime(2016, 10, 27, 19, 57, 39),
+                ),
             ]),
         datetime.datetime(2016, 10, 27, 19, 57, 39),
     ],
@@ -140,16 +171,24 @@ def test_chain_status_get_last_incremental_backup_time(
     [
         duplitab._ChainStatus(
             sets=[
-                duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
+                duplitab._SetStatus(
+                    backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33),
+                ),
             ]),
         datetime.datetime(2016, 10, 27, 19, 57, 33),
     ],
     [
         duplitab._ChainStatus(
             sets=[
-                duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
-                duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 35)),
-                duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 39)),
+                duplitab._SetStatus(
+                    backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33),
+                ),
+                duplitab._SetStatus(
+                    backup_time=datetime.datetime(2016, 10, 27, 19, 57, 35),
+                ),
+                duplitab._SetStatus(
+                    backup_time=datetime.datetime(2016, 10, 27, 19, 57, 39),
+                ),
             ]),
         datetime.datetime(2016, 10, 27, 19, 57, 33),
     ],
@@ -164,7 +203,9 @@ def test_chain_status_get_first_backup_time(chain_status, expected_time):
             archive_dir_path='/tmp/none',
             primary_chain=duplitab._ChainStatus(
                 sets=[
-                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
+                    duplitab._SetStatus(
+                        backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33),
+                    ),
                 ]),
         ),
         None,
@@ -174,9 +215,15 @@ def test_chain_status_get_first_backup_time(chain_status, expected_time):
             archive_dir_path='/tmp/none',
             primary_chain=duplitab._ChainStatus(
                 sets=[
-                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
-                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 35)),
-                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 39)),
+                    duplitab._SetStatus(
+                        backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33),
+                    ),
+                    duplitab._SetStatus(
+                        backup_time=datetime.datetime(2016, 10, 27, 19, 57, 35),
+                    ),
+                    duplitab._SetStatus(
+                        backup_time=datetime.datetime(2016, 10, 27, 19, 57, 39),
+                    ),
                 ]),
         ),
         datetime.datetime(2016, 10, 27, 19, 57, 39),
@@ -200,7 +247,9 @@ def test_collection_status_get_last_incremental_backup_time(
             archive_dir_path='/tmp/none',
             primary_chain=duplitab._ChainStatus(
                 sets=[
-                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
+                    duplitab._SetStatus(
+                        backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33),
+                    ),
                 ]),
         ),
         datetime.datetime(2016, 10, 27, 19, 57, 33),
@@ -210,9 +259,15 @@ def test_collection_status_get_last_incremental_backup_time(
             archive_dir_path='/tmp/none',
             primary_chain=duplitab._ChainStatus(
                 sets=[
-                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33)),
-                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 35)),
-                    duplitab._SetStatus(backup_time=datetime.datetime(2016, 10, 27, 19, 57, 39)),
+                    duplitab._SetStatus(
+                        backup_time=datetime.datetime(2016, 10, 27, 19, 57, 33),
+                    ),
+                    duplitab._SetStatus(
+                        backup_time=datetime.datetime(2016, 10, 27, 19, 57, 35),
+                    ),
+                    duplitab._SetStatus(
+                        backup_time=datetime.datetime(2016, 10, 27, 19, 57, 39),
+                    ),
                 ]),
         ),
         datetime.datetime(2016, 10, 27, 19, 57, 33),

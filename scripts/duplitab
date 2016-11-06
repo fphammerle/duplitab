@@ -237,11 +237,18 @@ def run(command, config_path, quiet, duplicity_verbosity,
         table = []
         for backup_attr in filtered_config:
             collection = duplitab.Collection(url = backup_attr['target_url'])
-            status = collection.request_status()
+            if not quiet:
+                sys.stderr.write('request status of collection {!r}\n'.format(collection.url))
+            try:
+                status = collection.request_status()
+            except duplitab.DuplicityCommandFailedError as ex:
+                status = None
+                if not quiet:
+                    sys.stderr.write(ex.msg)
             table.append([
                 collection.url,
-                status.last_full_backup_time or 'never',
-                status.last_incremental_backup_time or 'never',
+                (status.last_full_backup_time or 'never') if status else None,
+                (status.last_incremental_backup_time or 'never') if status else None,
                 ])
         print(tabulate.tabulate(
             table,

@@ -5,10 +5,23 @@ import sys
 import time
 
 
-def _duplicity(params):
-    stdout = subprocess.check_output(
-        ['duplicity'] + params,
-    )
+class DuplicityCommandFailedError(RuntimeError):
+
+    @property
+    def msg(self):
+        return self.__cause__.output.decode(sys.stdout.encoding)
+
+
+def _duplicity(params, timeout_seconds=None):
+    try:
+        stdout = subprocess.check_output(
+            ['duplicity']
+            + (['--timeout', str(timeout_seconds)] if timeout_seconds else [])
+            + params,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as ex:
+        raise DuplicityCommandFailedError() from ex
     return stdout.decode(sys.stdout.encoding)
 
 
@@ -23,9 +36,12 @@ class Collection(object):
     def __init__(self, url):
         self.url = url
 
-    def request_status(self):
+    def request_status(self, timeout_seconds=None):
         return _CollectionStatus._parse(
-            text=_duplicity(['collection-status', self.url])
+            text=_duplicity(
+                ['collection-status', self.url],
+                timeout_seconds=timeout_seconds,
+            )
         )
 
 

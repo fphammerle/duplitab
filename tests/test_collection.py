@@ -106,6 +106,16 @@ def test_collection_request_status(url, expected_status_attr):
         assert value == getattr(s, name)
 
 
+@pytest.mark.parametrize(('url'), [
+    'file://{}'.format(os.path.join(test_collections_dir_path, 'broken-symlink')),
+    'file://{}'.format(os.path.join(test_collections_dir_path, 'broken-symlink', 'backup')),
+])
+def test_collection_request_status_fail(url):
+    c = duplitab.Collection(url=url)
+    with pytest.raises(duplitab.DuplicityCommandFailedError):
+        c.request_status()
+
+
 @pytest.mark.parametrize(('chain_status', 'expected_time'), [
     [
         duplitab._ChainStatus(

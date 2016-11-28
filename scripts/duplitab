@@ -276,6 +276,7 @@ def _init_argparser():
             default = '/etc/duplitab',
             )
     argparser.add_argument(
+            '-u',
             '--filter-target-url',
             dest = 'target_url_filter_regex',
             metavar = 'REGEXP',
